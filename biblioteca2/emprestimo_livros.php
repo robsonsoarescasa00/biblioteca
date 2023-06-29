@@ -12,7 +12,29 @@ while ($row = $result_alunos->fetch_assoc()) {
     $alunos[] = $row;
 }
 
-$conn->close();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Verificar se o formulário foi enviado
+
+    // Obter os dados do formulário
+    $matricula = $_POST['matricula'];
+    $livros = $_POST['livros'];
+    $data_entrega = $_POST['data_entrega'];
+
+    // Inserir os dados na tabela "reserva"
+    $sql_inserir = "INSERT INTO Reserva (matricula, id_livro, data_entrega, status) VALUES ";
+    foreach ($livros as $livro) {
+        $sql_inserir .= "($matricula, $livro, '$data_entrega', 1), ";
+    }
+    $sql_inserir = rtrim($sql_inserir, ", ");
+
+    if ($conn->query($sql_inserir) === TRUE) {
+        echo "Empréstimo efetuado com sucesso.";
+    } else {
+        echo "Erro ao efetuar o empréstimo: " . $conn->error;
+    }
+
+    $conn->close();
+}
 ?>
 
 <!DOCTYPE html>
@@ -24,7 +46,7 @@ $conn->close();
 <body>
     <div class="cl1 ">
     <h2>Empréstimo de Livros</h2>
-    <form action="salvar_emprestimo.php" method="post">
+    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
         <label>Aluno:</label>
         <select name="matricula" required>
             <?php foreach ($alunos as $aluno): ?>
@@ -33,9 +55,9 @@ $conn->close();
         </select><br><br>
 
         <label>Livros:</label><br>
-        <?php while ($row = $result_livros->fetch_assoc()): ?>
+        <?php foreach ($result_livros as $row): ?>
             <input type="checkbox" name="livros[]" value="<?php echo $row['id']; ?>"> <?php echo $row['titulo']; ?><br>
-        <?php endwhile; ?><br>
+        <?php endforeach; ?><br>
 
         <label>Data de Entrega:</label>
         <input type="date" name="data_entrega" required><br><br>
